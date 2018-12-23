@@ -18,7 +18,7 @@ Code flex can also be used to compile source code written inline with javascript
 The code below will locate all .vb files in the specified directory (recursively). If the code compiles, the result will return a assemblyId in the callback function. This assemblyId is used to access this compiled assembly.
 
 ```javascript
-var codeflex = require("codeflex");
+var flex = require("codeflex");
 
 flex.compileDirectory("vb","./directory/containing/vb/files/",function(err, assemblyId){
     if(err){
@@ -37,6 +37,8 @@ flex.compileDirectory("vb","./directory/containing/vb/files/",function(err, asse
 
 To compile source files in c# instead of vb. Use the code above and set the first parameter (language parameter) of flex.compileDirectory() to 'c#'
 ```javascript
+var flex = require("codeflex");
+
 flex.compileDirectory("c#","./directory/containing/c/files/",function(err, assemblyId){
 
 });
@@ -186,7 +188,7 @@ end namespace
                 return;
             }
             console.log("The method completed execution and returned the result:");
-            console.log(result);// The result should be: 'Hello, Phil.'
+            console.log(result);// The result should be: 'Hello, Phil'
         });
     });
 });
