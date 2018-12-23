@@ -1,6 +1,6 @@
 {
   "name": "codeflex",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Compile and access .NET C# and VB code from Node.",
   "main": "index.js",
   "scripts": {
@@ -18,7 +18,7 @@
     "VB"
   ],
   "author": "Phillip Snook",
-  "license": "ISC",
+  "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/philsnook/codeflex/issues"
   },
