@@ -8,9 +8,12 @@ Code flex is a really useful tool that allows us to run C#/VB code in a Node JS 
 
 Code flex can also be used to compile source code written inline with javascript. Making it easy to switch between languages eliminating the need to re-write existing c# or vb code.
 
-### Compiling source code from a directory
+## Requirements
 
-#### Compile .vb files from a directory
+1. Windows based operating system
+2. .NET Framework 4.6.2
+
+### Compile .vb files from a directory
 
 The code below will locate all .vb files in the specified directory (recursively). If the code compiles, the result will return a assemblyId in the callback function. This assemblyId is used to access this compiled assembly.
 
@@ -30,7 +33,7 @@ flex.compileDirectory("vb","./directory/containing/vb/files/",function(err, asse
 
 ```
 
-#### Compile c# files from a directory
+### Compile c# files from a directory
 
 To compile source files in c# instead of vb. Use the code above and set the first parameter (language parameter) of flex.compileDirectory() to 'c#'
 ```javascript
@@ -39,7 +42,7 @@ flex.compileDirectory("c#","./directory/containing/c/files/",function(err, assem
 });
 ```
 
-#### Compiling source code as inline code
+### Compiling source code as inline code
 
 You don't have to compile code from source files, you can instead provide code to compile as a string and use it in the same way.
 
