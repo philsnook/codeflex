@@ -1,0 +1,29 @@
+{
+  "name": "codeflex",
+  "version": "1.0.2",
+  "description": "Compile and access .NET C# and VB code from Node.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/philsnook/codeflex.git"
+  },
+  "keywords": [
+    ".NET",
+    "Node",
+    "Electron",
+    "C#",
+    "VB"
+  ],
+  "author": "Phillip Snook",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/philsnook/codeflex/issues"
+  },
+  "homepage": "https://github.com/philsnook/codeflex#readme",
+  "dependencies": {
+    "ffi": "^2.3.0"
+  }
+}
