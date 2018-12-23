@@ -53,12 +53,12 @@ var flex = require("codeflex");
 
 flex.compileCode("vb",function(){
 /*
-public namespace MyNamespace
+namespace MyNamespace
 
 public class VBTestCode
 
-    public SayHello(PersonName as String) as String
-        return "Hello, " & PersonName & "."
+    public function SayHello(Name as string) as String
+        return "Hello, " & Name 
     end function
 
 end class
@@ -85,12 +85,12 @@ var flex = require("codeflex");
 
 flex.compileCode("vb",function(){
 /*
-public namespace MyNamespace
+namespace MyNamespace
 
 public class VBTestCode
 
-    public SayHello(PersonName as String) as String
-        return "Hello, " & PersonName & "."
+    public function SayHello(Name as string) as String
+        return "Hello, " & Name 
     end function
 
 end class
@@ -127,7 +127,7 @@ Now we have our assemblyId and instanceId, we can finally call a method within t
 4. The forth parameter is the call back function that raises when the method returns.
 
 ```javascript
-  flex.executeMethod(assemblyId,instanceId,{"PersonName":"Phil"},function(err, result){
+  flex.executeMethod(assemblyId,instanceId,"SayHello",{"PersonName":"Phil"},function(err, result){
             if(err){
                 //Something went wrong. The method invocation failed.
                 console.log(err);
@@ -149,12 +149,12 @@ var flex = require("codeflex");
 
 flex.compileCode("vb",function(){
 /*
-public namespace MyNamespace
+namespace MyNamespace
 
 public class VBTestCode
 
-    public SayHello() as String
-        return "Hello world."
+    public function SayHello(Name as string) as String
+        return "Hello, " & Name 
     end function
 
 end class
@@ -179,7 +179,7 @@ end namespace
         //Instance created! We can now reference this instance using the returned instanceId.
         console.log(instanceId);
 
-        flex.executeMethod(assemblyId,instanceId,{},function(err, result){
+        flex.executeMethod(assemblyId,instanceId,"SayHello",{"PersonName":"Phil"},function(err, result){
             if(err){
                 //Something went wrong. The method invocation failed.
                 console.log(err);
