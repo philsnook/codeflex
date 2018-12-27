@@ -1,6 +1,9 @@
 # Codeflex
 
-Dynamically compile VB.NET and C#.NET code from javascript using Node.JS and Electron.
+A framework for the NPM package FFI:
+https://www.npmjs.com/package/ffi
+
+Dynamically compile VB.NET and C#.NET code from javascript using Node.JS, Compile entire directories of VB/C# code.
 
 ## Why use Codeflex?
 
