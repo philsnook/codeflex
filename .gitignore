@@ -3,3 +3,4 @@
 /dll/obj
 /dll/packages
 /dll/.vs
+*.tgz
