@@ -1,3 +1,5 @@
 /node_modules
-/codeflex-dll/bin
-/codeflex-dll/obj
+/dll/bin
+/dll/obj
+/dll/packages
+/dll/.vs

@@ -2,7 +2,7 @@ var ffi = require('ffi');
 var fs = require('fs');
 var path = require('path');
 
-var libm = ffi.Library(`${__dirname}/bin/${process.arch}/codeflex.dll`, {
+var libm = ffi.Library(`${__dirname}/dll/bin/${process.arch}/codeflex.dll`, {
     'loadAssemblies':['void',[]],
     'compileCode': ['String',['String']],
     'createInstance':['String',['String','String']],
