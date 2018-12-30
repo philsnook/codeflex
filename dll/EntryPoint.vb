@@ -15,22 +15,34 @@ Public Class EntryPoint
 
     <DllExport(ExportName:="loadAssemblies", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
     Public Shared Sub loadAssemblies()
-        Dim currentAssemblyPath = Assembly.GetExecutingAssembly().Location.ToString().ToLower()
-        Dim workingDirectory = IO.Path.GetDirectoryName(currentAssemblyPath)
+        Try
+            Dim currentAssemblyPath = Assembly.GetExecutingAssembly().Location.ToString().ToLower()
+            Dim workingDirectory = IO.Path.GetDirectoryName(currentAssemblyPath)
 
 
-        For Each File In IO.Directory.GetFiles(workingDirectory, "*.dll")
-            If Not LCase(File) = LCase(currentAssemblyPath) Then
-                Dim Asm = Assembly.LoadFile(File)
-                If Not LoadedAssemblies.ContainsKey(Asm.FullName) Then
-                    LoadedAssemblies.Add(Asm.FullName, Asm)
+            For Each File In IO.Directory.GetFiles(workingDirectory, "*.dll")
+                If Not LCase(File) = LCase(currentAssemblyPath) Then
+                    Try
+                        Dim Asm = Assembly.LoadFile(File)
+                        If Not LoadedAssemblies.ContainsKey(Asm.FullName) Then
+                            LoadedAssemblies.Add(Asm.FullName, Asm)
+                        End If
+                    Catch ex As Exception
+                        Microsoft.VisualBasic.MsgBox(ex.Message,, "codeflex: " & IO.Path.GetFileName(File))
+                    End Try
+
                 End If
-            End If
-        Next
+            Next
 
-        RemoveHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
-        AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
+            RemoveHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
+            AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
+        Catch ex As Exception
+
+        End Try
+
     End Sub
+
+
 
 
     <DllExport(ExportName:="compileCode", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>

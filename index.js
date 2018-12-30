@@ -2,7 +2,35 @@ var ffi = require('ffi');
 var fs = require('fs');
 var path = require('path');
 
-var libm = ffi.Library(`${__dirname}/dll/bin/${process.arch}/codeflex.dll`, {
+var arch = process.arch;
+
+if(arch=="ia32"){arch = "x86";}
+
+
+var asarMode = __dirname.indexOf("app.asar")>-1;
+var dllPath = `${__dirname}\\dll\\bin\\${arch}\\codeflex.dll`;
+var jsonDllPath = `${__dirname}\\dll\\bin\\${arch}\\Newtonsoft.Json.dll`;
+
+
+if(asarMode){
+    if(fs.existsSync('codeflex')==false){
+        fs.mkdirSync('codeflex');
+    }
+
+    var copyPath = 'codeflex\\codeflex.dll'; 
+    if(fs.existsSync(copyPath)!=true){
+        fs.copyFileSync(dllPath,copyPath,fs.constants.COPYFILE_EXCL);
+    }
+    
+    dllPath = copyPath;
+
+    var copyPath = 'codeflex\\Newtonsoft.Json.dll'; 
+    if(fs.existsSync(copyPath)!=true){
+        fs.copyFileSync(jsonDllPath,copyPath,fs.constants.COPYFILE_EXCL);
+    }
+}
+ 
+var libm = ffi.Library(dllPath, {
     'loadAssemblies':['void',[]],
     'compileCode': ['String',['String']],
     'createInstance':['String',['String','String']],
@@ -19,7 +47,18 @@ var utility ={
     },getFiles:function(dir, extension, files_){
         files_ = files_ || [];
         var files;
-        files = fs.readdirSync(dir);
+
+        if(dir.endsWith("\\")){
+            dir = dir.toString().substring(0,dir.length-1);
+        }
+       
+        try{
+            files = fs.readdirSync(dir);
+        }catch(ex){
+            console.log(ex);
+            files = [];
+        }
+ 
         for (var i in files){
             var name = path.join(dir, files[i]);
             if (fs.statSync(name).isDirectory()){
@@ -28,8 +67,8 @@ var utility ={
                 if(path.extname(name).toString().toLowerCase()==extension.toString().toLowerCase()){
                     files_.push(name);
                 }
-            }
-        }
+            } 
+        } 
         return files_;
     }
 };
@@ -56,7 +95,6 @@ module.exports = {
         config.code.push(statement);
 
         try{
-
             libm.loadAssemblies.async(function (err, res) {
                 if(err){
                     callBack(err,res);
@@ -65,14 +103,15 @@ module.exports = {
                 libm.compileCode.async(JSON.stringify(config), function (err, res) {
                     callBack(err, res);
                 });
-            });
-          
+            });     
         }catch(ex){
+            console.log("fail");
+            console.log(ex);
             callBack(ex, null);
         }
     },
     compileDirectory:function(language, directory, callBack){
- 
+        
         var config ={
             language: (language || "vb").toString().toLowerCase(),
             code:[]
@@ -91,7 +130,11 @@ module.exports = {
 
         var compileSources = function(){
             try{
-                            
+                if(config.code.length==0){
+                    callBack(new Error("No code to compile"),null);
+                    return;
+                }
+
                 libm.loadAssemblies.async(function (err, res) {
                     if(err){
                         callBack(err,res);
@@ -101,22 +144,27 @@ module.exports = {
                         callBack(err,res);
                     });
                 });
-
+ 
             }catch(ex){
-                callBack(ex,null);
+                console.log("fail");
+                console.log(ex);
+                callBack(ex, null);
             }
         };
 
         files = utility.getFiles(directory,extension);
       
         var addSourceFromNextFile = function(){
+          
             var filename = files[0];
+       
             if(filename==null){
                 compileSources();
                 return;
             }
-            files.splice(0,1);
 
+            files.splice(0,1);
+           
             fs.readFile(filename, 'utf8', function(err, statement) {
                 if(err){
                     callBack(err,null);
