@@ -272,7 +272,7 @@ module.exports = {
                         return;
                     }
 
-                    callBack(err,res);
+                    callBack(res.error, res.result);
                 });
             });
         }catch(ex){
