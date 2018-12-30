@@ -118,7 +118,6 @@ module.exports = {
                 });
             });     
         }catch(ex){
-            console.log("fail");
             console.log(ex);
             callBack(ex, null);
         }
@@ -148,19 +147,14 @@ module.exports = {
                     return;
                 }
 
+             
                 libm.loadAssemblies.async(function (err, res) {
+                   
                     if(err){
                         callBack(err,res);
                         return;
                     }
-
-                    res = JSON.parse(res);
-
-                    if(res.error){
-                        callBack(res.error, null);
-                        return;
-                    }
-
+ 
                     libm.compileCode.async(JSON.stringify(config), function (err, res) {
                         if(err){
                             callBack(err,res);
@@ -172,7 +166,6 @@ module.exports = {
                 });
  
             }catch(ex){
-                console.log("fail");
                 console.log(ex);
                 callBack(ex, null);
             }
@@ -210,13 +203,7 @@ module.exports = {
                     callBack(err,res);
                     return;
                 }
-                res = JSON.parse(res);
-
-                if(res.error){
-                    callBack(res.error, null);
-                    return;
-                }
-
+  
                 libm.createInstance.async(assemblyId, instanceType,function (err, res) {
                     if(err){
                         callBack(err,res);
@@ -230,7 +217,7 @@ module.exports = {
                         return;
                     }
 
-                    callBack(err,res);
+                    callBack(res.error,res.result);
                 });
             });
         }catch(ex){
@@ -245,19 +232,14 @@ module.exports = {
                     callBack(err,res);
                     return;
                 }
-                res = JSON.parse(res);
-
-                if(res.error){
-                    callBack(res.error, null);
-                    return;
-                }
-
-                libm.executeMethod.async(assemblyId, instanceId,method,params,function (err, res) {
+  
+                libm.executeMethod.async(assemblyId, instanceId,method, params,function (err, res) {
+                 
                     if(err){
                         callBack(err,res);
                         return;
                     }
-                    
+             
                     res = JSON.parse(res);
 
                     if(res.error){

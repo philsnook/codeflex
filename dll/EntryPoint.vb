@@ -168,8 +168,14 @@ Public Class EntryPoint
                 Items.Add(P.Value.ToObject(Of Object))
             Next
 
-            Dim oRetObj = oMethodInfo.Invoke(instance, Items.ToArray)
-            ResultObj("result") = oRetObj
+            Dim oRetObj As Object = oMethodInfo.Invoke(instance, Items.ToArray)
+
+            If IsNothing(oRetObj) Then
+                ResultObj("result") = Nothing
+            Else
+                ResultObj("result") = oRetObj.ToString
+            End If
+
             ResultObj("error") = Nothing
         Catch ex As Exception
             ResultObj("result") = String.Empty
