@@ -173,7 +173,7 @@ Public Class EntryPoint
             If IsNothing(oRetObj) Then
                 ResultObj("result") = Nothing
             Else
-                ResultObj("result") = oRetObj.ToString
+                ResultObj("result") = JToken.FromObject(oRetObj)
             End If
 
             ResultObj("error") = Nothing
