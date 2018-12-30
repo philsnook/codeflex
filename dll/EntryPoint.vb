@@ -19,7 +19,6 @@ Public Class EntryPoint
             Dim currentAssemblyPath = Assembly.GetExecutingAssembly().Location.ToString().ToLower()
             Dim workingDirectory = IO.Path.GetDirectoryName(currentAssemblyPath)
 
-
             For Each File In IO.Directory.GetFiles(workingDirectory, "*.dll")
                 If Not LCase(File) = LCase(currentAssemblyPath) Then
                     Try
@@ -37,9 +36,7 @@ Public Class EntryPoint
             RemoveHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
             AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
         Catch ex As Exception
-
         End Try
-
     End Sub
 
 
@@ -47,111 +44,138 @@ Public Class EntryPoint
 
     <DllExport(ExportName:="compileCode", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
     Public Shared Function compileCode(config As String) As String
+        Dim AssmID As String
+        Dim ResultObj As New JObject
 
-        Dim ParamObj As JObject
-        Dim CodeArray As JArray
-        Dim language As String
+        Try
+            Dim ParamObj As JObject
+            Dim CodeArray As JArray
+            Dim language As String
 
-        ParamObj = JObject.Parse(config)
+            ParamObj = JObject.Parse(config)
 
-        language = ParamObj("language")
-        CodeArray = ParamObj("code")
+            language = ParamObj("language").Value(Of String)
+            CodeArray = ParamObj("code").Value(Of JArray)
 
-        Dim Items As New List(Of String)
+            Dim Items As New List(Of String)
 
-        For Each P In CodeArray
-            Items.Add(P.ToString())
-        Next
-
-        Dim codeProvider As Object
-
-        Select Case language
-            Case "vb"
-                codeProvider = New VBCodeProvider()
-            Case Else
-                codeProvider = New CSharpCodeProvider()
-        End Select
-
-
-        Dim oCParams As New CompilerParameters
-        Dim parameters As New CompilerParameters()
-        Dim results As CompilerResults
-
-        parameters.GenerateExecutable = False
-
-        results = codeProvider.CompileAssemblyFromSource(oCParams, Items.ToArray)
-
-        If results.Errors.Count > 0 Then
-            'There were compiler errors
-            Dim Err As String = ""
-            Dim CompErr As CompilerError
-            For Each CompErr In results.Errors
-                Err = Err &
-                "Line number " & CompErr.Line &
-                ", Error Number: " & CompErr.ErrorNumber &
-                ", '" & CompErr.ErrorText & ";" &
-                Environment.NewLine & Environment.NewLine
+            For Each P In CodeArray
+                Items.Add(P.ToString())
             Next
-            Throw New Exception(Err)
-        End If
 
-        Dim AssmID As String = Guid.NewGuid.ToString
+            Dim codeProvider As Object
 
-        CompiledAssemblies.Add(AssmID, results.CompiledAssembly)
+            Select Case language
+                Case "vb"
+                    codeProvider = New VBCodeProvider()
+                Case Else
+                    codeProvider = New CSharpCodeProvider()
+            End Select
 
-        Return AssmID
+
+            Dim oCParams As New CompilerParameters
+            Dim parameters As New CompilerParameters()
+            Dim results As CompilerResults
+
+            parameters.GenerateExecutable = False
+
+            results = codeProvider.CompileAssemblyFromSource(oCParams, Items.ToArray)
+
+            If results.Errors.Count > 0 Then
+                'There were compiler errors
+                Dim Err As String = ""
+                Dim CompErr As CompilerError
+                For Each CompErr In results.Errors
+                    Err = Err &
+                    "Line number " & CompErr.Line &
+                    ", Error Number: " & CompErr.ErrorNumber &
+                    ", '" & CompErr.ErrorText & ";" &
+                    Environment.NewLine & Environment.NewLine
+                Next
+                Throw New Exception(Err)
+            End If
+
+            AssmID = Guid.NewGuid.ToString
+
+            CompiledAssemblies.Add(AssmID, results.CompiledAssembly)
+
+            ResultObj("result") = AssmID
+            ResultObj("error") = Nothing
+        Catch ex As Exception
+            ResultObj("result") = String.Empty
+            ResultObj("error") = ex.Message
+        End Try
+        Return ResultObj.ToString
     End Function
 
 
     <DllExport(ExportName:="createInstance", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
     Public Shared Function createInstance(assemblyId As String, instanceType As String) As String
-        Dim CompiledAssembly = CompiledAssemblies(assemblyId)
+        Dim ResultObj As New JObject
 
-        If (IsNothing(CompiledAssembly)) Then
-            Throw New Exception(assemblyId & " assemblyId is invalid")
-        End If
+        Try
+            Dim CompiledAssembly = CompiledAssemblies(assemblyId)
 
-        Dim instance = CompiledAssembly.CreateInstance(instanceType)
+            If (IsNothing(CompiledAssembly)) Then
+                Throw New Exception(assemblyId & " assemblyId is invalid")
+            End If
 
-        If (IsNothing(instance)) Then
-            Throw New Exception(instanceType & " type was not found.")
-        End If
-        Dim instanceId = Guid.NewGuid.ToString
+            Dim instance = CompiledAssembly.CreateInstance(instanceType)
 
-        Instances.Add(instanceId, instance)
-        Return instanceId
+            If (IsNothing(instance)) Then
+                Throw New Exception(instanceType & " type was not found.")
+            End If
+            Dim instanceId = Guid.NewGuid.ToString
+
+            Instances.Add(instanceId, instance)
+
+            ResultObj("result") = instanceId
+            ResultObj("error") = Nothing
+        Catch ex As Exception
+            ResultObj("result") = String.Empty
+            ResultObj("error") = ex.Message
+        End Try
+        Return ResultObj.ToString
     End Function
 
     <DllExport(ExportName:="executeMethod", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
     Public Shared Function executeMethod(assemblyId As String, instanceId As String, method As String, params As String) As String
-        Dim CompiledAssembly = CompiledAssemblies(assemblyId)
+        Dim ResultObj As New JObject
+        Try
+            Dim CompiledAssembly = CompiledAssemblies(assemblyId)
 
-        If (IsNothing(CompiledAssembly)) Then
-            Throw New Exception(assemblyId & " assemblyId is invalid")
-        End If
+            If (IsNothing(CompiledAssembly)) Then
+                Throw New Exception(assemblyId & " assemblyId is invalid")
+            End If
 
-        Dim instance = Instances(instanceId)
+            Dim instance = Instances(instanceId)
 
-        If (IsNothing(instance)) Then
-            Throw New Exception(instanceId & " instanceId is invalid")
-        End If
+            If (IsNothing(instance)) Then
+                Throw New Exception(instanceId & " instanceId is invalid")
+            End If
 
-        Dim oType = instance.GetType
-        Dim oMethodInfo = oType.GetMethod(method)
+            Dim oType = instance.GetType
+            Dim oMethodInfo = oType.GetMethod(method)
 
-        If (IsNothing(oMethodInfo)) Then
-            Throw New Exception(method & " method was not found.")
-        End If
+            If (IsNothing(oMethodInfo)) Then
+                Throw New Exception(method & " method was not found.")
+            End If
 
-        Dim ParamObj As JObject = JObject.Parse(params)
-        Dim Items As New List(Of Object)
+            Dim ParamObj As JObject = JObject.Parse(params)
+            Dim Items As New List(Of Object)
 
-        For Each P In ParamObj
-            Items.Add(P.Value.ToObject(Of Object))
-        Next
+            For Each P In ParamObj
+                Items.Add(P.Value.ToObject(Of Object))
+            Next
 
-        Dim oRetObj = oMethodInfo.Invoke(instance, Items.ToArray)
-        Return oRetObj
+            Dim oRetObj = oMethodInfo.Invoke(instance, Items.ToArray)
+            ResultObj("result") = oRetObj
+            ResultObj("error") = Nothing
+        Catch ex As Exception
+            ResultObj("result") = String.Empty
+            ResultObj("error") = ex.Message
+        End Try
+        Return ResultObj.ToString
     End Function
 
 End Class
