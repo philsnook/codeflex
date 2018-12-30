@@ -57,10 +57,10 @@ Public Class EntryPoint
             language = ParamObj("language").Value(Of String)
             CodeArray = ParamObj("code").Value(Of JArray)
 
-            Dim Items As New List(Of String)
+            Dim CodeFiles As New List(Of String)
 
             For Each P In CodeArray
-                Items.Add(P.ToString())
+                CodeFiles.Add(P.ToString())
             Next
 
             Dim codeProvider As Object
@@ -77,9 +77,33 @@ Public Class EntryPoint
             Dim parameters As New CompilerParameters()
             Dim results As CompilerResults
 
+            Dim ImportList As New List(Of String)
+            Dim Pos As Integer
+            Dim Keyword As String = "@import("
+
+            For Each Content In CodeFiles
+                Dim Lines = Replace(Content, Chr(10), String.Empty)
+                For Each Line In Lines.Split(Chr(34))
+                    Pos = Line.IndexOf(Keyword)
+                    If Pos > -1 Then
+                        Line = Mid(Line, Pos + Keyword.Length + 1)
+                        Pos = Line.IndexOf(")")
+                        If Pos > -1 Then
+                            Line = Mid(Line, 1, Pos)
+                            ImportList.Add(Line)
+                        End If
+                    End If
+                Next
+            Next
+
+
+            For Each Ref In ImportList
+                oCParams.ReferencedAssemblies.Add(Ref)
+            Next
+
             parameters.GenerateExecutable = False
 
-            results = codeProvider.CompileAssemblyFromSource(oCParams, Items.ToArray)
+            results = codeProvider.CompileAssemblyFromSource(oCParams, CodeFiles.ToArray)
 
             If results.Errors.Count > 0 Then
                 'There were compiler errors

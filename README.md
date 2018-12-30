@@ -197,3 +197,17 @@ end namespace
 });
 
 ```
+
+## Adding .NET Assembly References
+
+You can include additional references to the .NET framework assemblies by adding @import at the top of the code to be compiled.
+
+Visual Basic:
+```vb
+'@import(System.Drawing.dll)
+```
+
+C#
+```csharp
+//@import(System.Drawing.dll)
+```

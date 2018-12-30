@@ -34,7 +34,7 @@ var libm = ffi.Library(dllPath, {
     'loadAssemblies':['void',[]],
     'compileCode': ['String',['String']],
     'createInstance':['String',['String','String']],
-    'executeMethod':['String',['String','String','String','String']],
+    'executeMethod':['String',['String','String','String','String']]
 });
 
 var utility ={
@@ -74,8 +74,14 @@ var utility ={
 };
 
 module.exports = {
-    compileCode:function(language, statement, callBack){
-        
+    compileCode:function(language, statement, callBackFn){
+
+        var callBack = function(err,result){
+            setTimeout(function(){
+                callBackFn(err,result);
+            },1);
+        };
+
         var config ={
             language: (language || "vb").toString().toLowerCase(),
             code:[]
@@ -122,8 +128,14 @@ module.exports = {
             callBack(ex, null);
         }
     },
-    compileDirectory:function(language, directory, callBack){
+    compileDirectory:function(language, directory, callBackFn){
         
+        var callBack = function(err,result){
+            setTimeout(function(){
+                callBackFn(err,result);
+            },1);
+        };
+
         var config ={
             language: (language || "vb").toString().toLowerCase(),
             code:[]
@@ -196,7 +208,13 @@ module.exports = {
 
         addSourceFromNextFile();
     },
-    createInstance:function(assemblyId, instanceType, callBack){
+    createInstance:function(assemblyId, instanceType, callBackFn){
+        var callBack = function(err,result){
+            setTimeout(function(){
+                callBackFn(err,result);
+            },1);
+        };
+
         try{
             libm.loadAssemblies.async(function (err, res) {
                 if(err){
@@ -224,7 +242,14 @@ module.exports = {
             callBack(ex,null);
         }
     },
-    executeMethod(assemblyId, instanceId, method, params, callBack){
+    executeMethod(assemblyId, instanceId, method, params, callBackFn){
+        
+        var callBack = function(err,result){
+            setTimeout(function(){
+                callBackFn(err,result);
+            },1);
+        };
+
         try{
             params = JSON.stringify(params);
             libm.loadAssemblies.async(function (err, res) {
