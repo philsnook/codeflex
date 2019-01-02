@@ -54,8 +54,8 @@ Public Class EntryPoint
 
             ParamObj = JObject.Parse(config)
 
-            language = ParamObj("language").Value(Of String)
-            CodeArray = ParamObj("code").Value(Of JArray)
+            language = ParamObj.Value(Of String)("language")
+            CodeArray = ParamObj.Value(Of JArray)("code")
 
             Dim CodeFiles As New List(Of String)
 
@@ -103,7 +103,14 @@ Public Class EntryPoint
 
             parameters.GenerateExecutable = False
 
-            results = codeProvider.CompileAssemblyFromSource(oCParams, CodeFiles.ToArray)
+            Select Case language
+                Case "vb"
+                    results = CType(codeProvider, VBCodeProvider).CompileAssemblyFromSource(oCParams, CodeFiles.ToArray)
+
+                Case Else
+                    results = CType(codeProvider, CSharpCodeProvider).CompileAssemblyFromSource(oCParams, CodeFiles.ToArray)
+            End Select
+
 
             If results.Errors.Count > 0 Then
                 'There were compiler errors
