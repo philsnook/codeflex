@@ -1,6 +1,6 @@
 {
   "name": "codeflex",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "Compile and access .NET C# and VB code from Node.",
   "main": "index.js",
   "scripts": {
