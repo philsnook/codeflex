@@ -210,7 +210,13 @@ Public Class EntryPoint
             ResultObj("error") = Nothing
         Catch ex As Exception
             ResultObj("result") = String.Empty
-            ResultObj("error") = ex.Message
+
+            If IsNothing(ex.InnerException) = False Then
+                ResultObj("error") = ex.InnerException.Message
+            Else
+                ResultObj("error") = ex.Message
+            End If
+
         End Try
         Return ResultObj.ToString
     End Function
