@@ -199,8 +199,6 @@ Public Class EntryPoint
             '    Items.Add(P.Value.ToObject(Of Object))
             'Next
 
-            Dim oRetObj As Object = oMethodInfo.Invoke(instance, Items.ToArray)
-
             For Each P As ParameterInfo In oMethodInfo.GetParameters()
                 Dim pm = ParamObj(P.Name)
                 If IsNothing(pm) Then
@@ -209,6 +207,10 @@ Public Class EntryPoint
                     Items.Add(pm.Value(Of Object))
                 End If
             Next
+
+            Dim oRetObj As Object = oMethodInfo.Invoke(instance, Items.ToArray)
+
+
 
             If IsNothing(oRetObj) Then
                 ResultObj("result") = Nothing
