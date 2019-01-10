@@ -195,11 +195,20 @@ Public Class EntryPoint
             Dim ParamObj As JObject = JObject.Parse(params)
             Dim Items As New List(Of Object)
 
-            For Each P In ParamObj
-                Items.Add(P.Value.ToObject(Of Object))
-            Next
+            'For Each P In ParamObj
+            '    Items.Add(P.Value.ToObject(Of Object))
+            'Next
 
             Dim oRetObj As Object = oMethodInfo.Invoke(instance, Items.ToArray)
+
+            For Each P As ParameterInfo In oMethodInfo.GetParameters()
+                Dim pm = ParamObj(P.Name)
+                If IsNothing(pm) Then
+                    Items.Add(Nothing)
+                Else
+                    Items.Add(pm.Value(Of Object))
+                End If
+            Next
 
             If IsNothing(oRetObj) Then
                 ResultObj("result") = Nothing
