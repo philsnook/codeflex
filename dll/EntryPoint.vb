@@ -204,7 +204,7 @@ Public Class EntryPoint
                 If IsNothing(pm) Then
                     Items.Add(Nothing)
                 Else
-                    Items.Add(pm.Value(Of Object))
+                    Items.Add(pm.ToObject(P.ParameterType))
                 End If
             Next
 
