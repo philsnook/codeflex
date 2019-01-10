@@ -212,7 +212,7 @@ Public Class EntryPoint
             ResultObj("result") = String.Empty
 
             If IsNothing(ex.InnerException) = False Then
-                ResultObj("error") = ex.InnerException.Message
+                ResultObj("error") = ex.Message & vbNewLine & ex.InnerException.Message
             Else
                 ResultObj("error") = ex.Message
             End If
