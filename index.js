@@ -197,7 +197,7 @@ module.exports = {
             files.splice(0,1);
            
 
-            fs.readFile(filename, function(err, statement) {
+            fs.readFile(filename, "ascii", function(err, statement) {
                 if(err){
                     callBack(err,null);
                     return;
