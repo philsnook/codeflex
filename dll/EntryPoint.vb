@@ -14,32 +14,38 @@ Public Class EntryPoint
     End Function
 
     <DllExport(ExportName:="loadAssemblies", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
-    Public Shared Sub loadAssemblies()
+    Public Shared Function loadAssemblies() As String
+
         Try
+
             Dim currentAssemblyPath = Assembly.GetExecutingAssembly().Location.ToString().ToLower()
             Dim workingDirectory = IO.Path.GetDirectoryName(currentAssemblyPath)
 
             For Each File In IO.Directory.GetFiles(workingDirectory, "*.dll")
                 If Not LCase(File) = LCase(currentAssemblyPath) Then
-                    Try
-                        Dim Asm = Assembly.LoadFile(File)
-                        If Not LoadedAssemblies.ContainsKey(Asm.FullName) Then
-                            LoadedAssemblies.Add(Asm.FullName, Asm)
-                        End If
-                    Catch ex As Exception
-                        Microsoft.VisualBasic.MsgBox(ex.Message,, "codeflex: " & IO.Path.GetFileName(File))
-                    End Try
+
+                    Dim Asm = Assembly.LoadFile(File)
+                    If Not LoadedAssemblies.ContainsKey(Asm.FullName) Then
+                        LoadedAssemblies.Add(Asm.FullName, Asm)
+                    End If
 
                 End If
             Next
 
             RemoveHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
             AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
+            Return String.Empty
         Catch ex As Exception
+            Return ex.Message
         End Try
-    End Sub
+    End Function
 
-
+    Private Shared Function Encode(T As String) As String
+        T = Replace(T, Chr(34), "")
+        T = Replace(T, "\", "")
+        T = Replace(T, "/", "")
+        Return T
+    End Function
 
 
     <DllExport(ExportName:="compileCode", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
@@ -74,7 +80,6 @@ Public Class EntryPoint
 
 
             Dim oCParams As New CompilerParameters
-            Dim parameters As New CompilerParameters()
             Dim results As CompilerResults
 
             Dim ImportList As New List(Of String)
@@ -96,12 +101,17 @@ Public Class EntryPoint
                 Next
             Next
 
+            oCParams.ReferencedAssemblies.Add("System.Core.dll")
+            For Each asm In LoadedAssemblies
+                oCParams.ReferencedAssemblies.Add(asm.Value.Location)
+            Next
+
 
             For Each Ref In ImportList
                 oCParams.ReferencedAssemblies.Add(Ref)
             Next
 
-            parameters.GenerateExecutable = False
+            oCParams.GenerateExecutable = False
 
             Select Case language
                 Case "vb"
@@ -131,14 +141,12 @@ Public Class EntryPoint
             CompiledAssemblies.Add(AssmID, results.CompiledAssembly)
 
             ResultObj("result") = AssmID
-            ResultObj("error") = Nothing
         Catch ex As Exception
-            ResultObj("result") = String.Empty
             ResultObj("error") = ex.Message
         End Try
+
         Return ResultObj.ToString
     End Function
-
 
     <DllExport(ExportName:="createInstance", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
     Public Shared Function createInstance(assemblyId As String, instanceType As String) As String
@@ -161,9 +169,7 @@ Public Class EntryPoint
             Instances.Add(instanceId, instance)
 
             ResultObj("result") = instanceId
-            ResultObj("error") = Nothing
         Catch ex As Exception
-            ResultObj("result") = String.Empty
             ResultObj("error") = ex.Message
         End Try
         Return ResultObj.ToString
@@ -218,9 +224,7 @@ Public Class EntryPoint
                 ResultObj("result") = JToken.FromObject(oRetObj)
             End If
 
-            ResultObj("error") = Nothing
         Catch ex As Exception
-            ResultObj("result") = String.Empty
 
             If IsNothing(ex.InnerException) = False Then
                 ResultObj("error") = ex.Message & vbNewLine & ex.InnerException.Message
