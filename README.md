@@ -14,7 +14,7 @@ Code flex can also be used to compile source code written inline with javascript
 ## Requirements
 
 1. Windows based operating system
-2. .NET Framework 4.6.2
+2. .NET Framework 4.7.2
 
 ### Compile .vb files from a directory
 
