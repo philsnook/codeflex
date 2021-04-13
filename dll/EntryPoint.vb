@@ -5,6 +5,7 @@ Imports Newtonsoft.Json.Linq
 Imports RGiesecke.DllExport
 
 Public Class EntryPoint
+    Private Shared TaskResults As New List(Of CompletedTask)
     Private Shared LoadedAssemblies As New Dictionary(Of String, Assembly)
     Private Shared Instances As New Dictionary(Of String, Object)
     Private Shared CompiledAssemblies As New Dictionary(Of String, Assembly)
@@ -14,14 +15,12 @@ Public Class EntryPoint
     End Function
 
     <DllExport(ExportName:="loadAssemblies", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
-    Public Shared Function loadAssemblies() As String
-
+    Public Shared Function loadAssemblies(libsDirectory As String) As String
         Try
-
             Dim currentAssemblyPath = Assembly.GetExecutingAssembly().Location.ToString().ToLower()
             Dim workingDirectory = IO.Path.GetDirectoryName(currentAssemblyPath)
 
-            For Each File In IO.Directory.GetFiles(workingDirectory, "*.dll")
+            For Each File In IO.Directory.GetFiles(workingDirectory, "*.dll", IO.SearchOption.AllDirectories)
                 If Not LCase(File) = LCase(currentAssemblyPath) Then
 
                     Dim Asm = Assembly.LoadFile(File)
@@ -32,6 +31,18 @@ Public Class EntryPoint
                 End If
             Next
 
+            If IO.Directory.Exists(libsDirectory) Then
+                For Each File In IO.Directory.GetFiles(libsDirectory, "*.dll", IO.SearchOption.AllDirectories)
+                    If Not LCase(File) = LCase(currentAssemblyPath) Then
+                        Dim Asm = Assembly.LoadFile(File)
+                        If Not LoadedAssemblies.ContainsKey(Asm.FullName) Then
+                            LoadedAssemblies.Add(Asm.FullName, Asm)
+                        End If
+                    End If
+                Next
+            End If
+
+
             RemoveHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
             AddHandler AppDomain.CurrentDomain.AssemblyResolve, AddressOf ResolveEventHandler
             Return String.Empty
@@ -39,6 +50,8 @@ Public Class EntryPoint
             Return ex.Message
         End Try
     End Function
+
+
 
     Private Shared Function Encode(T As String) As String
         T = Replace(T, Chr(34), "")
@@ -56,6 +69,7 @@ Public Class EntryPoint
         Try
             Dim ParamObj As JObject
             Dim CodeArray As JArray
+
             Dim language As String
 
             ParamObj = JObject.Parse(config)
@@ -100,6 +114,8 @@ Public Class EntryPoint
                     End If
                 Next
             Next
+
+
 
             oCParams.ReferencedAssemblies.Add("System.Core.dll")
             For Each asm In LoadedAssemblies
@@ -175,6 +191,21 @@ Public Class EntryPoint
         Return ResultObj.ToString
     End Function
 
+
+    <DllExport(ExportName:="getResult", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
+    Public Shared Function getResult(taskId As String) As String
+        For Each T In TaskResults
+            If T.TaskID = taskId Then
+                TaskResults.Remove(T)
+                Return T.Result.ToString()
+            End If
+        Next
+        Dim TaskResultObj As New JObject
+        TaskResultObj("completed") = False
+        Return TaskResultObj.ToString()
+    End Function
+
+
     <DllExport(ExportName:="executeMethod", CallingConvention:=Runtime.InteropServices.CallingConvention.StdCall)>
     Public Shared Function executeMethod(assemblyId As String, instanceId As String, method As String, params As String) As String
         Dim ResultObj As New JObject
@@ -214,16 +245,33 @@ Public Class EntryPoint
                 End If
             Next
 
-            Dim oRetObj As Object = oMethodInfo.Invoke(instance, Items.ToArray)
+            Dim TaskID = Guid.NewGuid.ToString()
 
 
+            Task.Run(Sub()
+                         Dim TaskResultObj As New JObject
+                         Try
+                             Dim oRetObj As Object = oMethodInfo.Invoke(instance, Items.ToArray)
+                             If IsNothing(oRetObj) Then
+                                 TaskResultObj("result") = Nothing
+                             Else
+                                 TaskResultObj("result") = JToken.FromObject(oRetObj)
+                             End If
+                         Catch ex As Exception
+                             If IsNothing(ex.InnerException) = False Then
+                                 TaskResultObj("error") = ex.Message & vbNewLine & ex.InnerException.Message
+                             Else
+                                 TaskResultObj("error") = ex.Message
+                             End If
+                         End Try
+                         TaskResultObj("completed") = True
+                         Dim CT As New CompletedTask
+                         CT.TaskID = TaskID
+                         CT.Result = TaskResultObj
+                         TaskResults.Add(CT)
+                     End Sub)
 
-            If IsNothing(oRetObj) Then
-                ResultObj("result") = Nothing
-            Else
-                ResultObj("result") = JToken.FromObject(oRetObj)
-            End If
-
+            ResultObj("taskId") = TaskID
         Catch ex As Exception
 
             If IsNothing(ex.InnerException) = False Then
@@ -236,4 +284,11 @@ Public Class EntryPoint
         Return ResultObj.ToString
     End Function
 
+
+
+End Class
+
+Class CompletedTask
+    Public TaskID As String
+    Public Result As JObject
 End Class
